@@ -74,6 +74,15 @@
     -#}
 
     {%- set target = arg_dict["target_relation"] -%}
+    {%- set target_table = target.identifier -%}
+    {%- set target_schema = target.schema -%}
+    {%- set target_database = target.database -%}
+    {%- set clean_target = api.Relation.create(
+        database=target_database,
+        schema=target_schema,
+        identifier=target_table
+        ) 
+    -%}
     {%- set source = arg_dict["temp_relation"] -%}
     {%- set dest_columns = arg_dict["dest_columns"] -%}
     {%- set predicates = [] -%}
@@ -98,7 +107,7 @@
     {% do predicates.append(model.config.event_time ~ " < TIMESTAMP '" ~ model.batch.event_time_end ~ "'") %}
     {% do arg_dict.update({'incremental_predicates': predicates}) %}
 
-    delete from {{ target }}
+    delete from {{ clean_target }}
     where (
     {% for predicate in predicates %}
         {%- if not loop.first %}and {% endif -%} {{ predicate }}
